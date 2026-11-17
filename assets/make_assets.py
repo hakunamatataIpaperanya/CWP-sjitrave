@@ -977,59 +977,99 @@ def stats():
 
 
 # ================================================================== POOL FOOTER
+SWIM_HEAD = [
+    ".....KKKKKKKK..",
+    "...KKGGGGKBWBK.",
+    "..KSSSSSSKBBBK.",
+    ".KGGGGGGGGKKKGK",
+    ".KGGGGGGGKKKGGK",
+    "KGGGGGGGKWWKKGK",
+    "KGGGGGGGKWKKKGK",
+    "KGGGGGGGKKKWKGK",
+    "KGGGGGGGGKKKGGK",
+    "KGGGGGGGGGGPPGK",
+    "KYYYYGGGGGGGKGK",
+    ".KYYYYYYYYKKYK.",
+    "..KKKKKKKKKKK..",
+]
+SWIM_PAL = {"K": "#0b0b1e", "G": "#3ddc84", "L": "#8ff5b8", "D": "#22a862", "Y": "#d4ffe6",
+            "W": "#ffffff", "P": "#ff8fc7", "S": "#ff4fd8", "B": "#38c6ff", "R": "#ff4757"}
+
+
+BUB_OPACITY = 'opacity=".7"'
+
+
 def pool():
-    W, H = 960, 170
+    W, H, P = 960, 128, 4
     css, defs, b = [FLICK], [], []
     defs.append(f'<clipPath id="fr"><path d="{ppath(0, 0, W, H)}"/></clipPath>')
     defs.append('<pattern id="edge" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#dff6ff"/>'
                 '<rect width="12" height="12" fill="#bfe9ff"/><rect x="12" y="12" width="12" height="12" fill="#bfe9ff"/></pattern>')
     defs.append('<pattern id="wav" width="48" height="24" patternUnits="userSpaceOnUse"><path d="M0 12h8v4H0zM8 8h8v4H8zM16 12h8v4h-8z" fill="#5fb8ff" opacity=".45"/></pattern>')
-    defs.append('<pattern id="wav2" width="80" height="40" patternUnits="userSpaceOnUse"><path d="M10 28h12v4H10zM22 24h8v4h-8zM50 8h10v4H50zM60 4h8v4h-8z" fill="#b8e4ff" opacity=".3"/></pattern>')
+    defs.append('<pattern id="wav2" width="80" height="40" patternUnits="userSpaceOnUse"><path d="M12 28h12v4H12zM24 24h8v4h-8zM52 8h8v4h-8zM60 4h8v4h-8z" fill="#b8e4ff" opacity=".3"/></pattern>')
     b.append('<g clip-path="url(#fr)">')
-    for y, c in [(24, '#0b6bbd'), (72, '#0a5ea6'), (120, '#08508f')]:
+    for y, c in [(24, '#0b6bbd'), (64, '#0a5ea6'), (100, '#08508f')]:
         b.append(rect(0, y, W, H - y, c))
-    css.append(".w1{animation:w1 3s linear infinite}@keyframes w1{to{transform:translateX(48px)}}"
-               ".w2{animation:w2 6s linear infinite}@keyframes w2{to{transform:translateX(-80px)}}")
+    css.append(".w1{animation:w1 3s steps(12) infinite}@keyframes w1{to{transform:translateX(48px)}}"
+               ".w2{animation:w2 6s steps(20) infinite}@keyframes w2{to{transform:translateX(-80px)}}")
     b.append(f'<g class="w1">{rect(-48, 24, W + 96, H, "url(#wav)")}</g>')
     b.append(f'<g class="w2">{rect(0, 24, W + 160, H, "url(#wav2)")}</g>')
     b.append(rect(0, 0, W, 24, 'url(#edge)'))
     b.append(rect(0, 24, W, 4, '#7cc7f0'))
 
-    # lane rope
-    css.append(".fb{animation:fb 1.4s ease-in-out infinite alternate}@keyframes fb{from{transform:translateY(-2px)}to{transform:translateY(3px)}}")
-    b.append(rect(0, 45, W, 2, '#e8f7ff', 'opacity=".6"'))
-    fd = cells_d(disc_cells(7, 2), 2)
-    for i, x in enumerate(range(8, W, 18)):
+    # lane rope (same 4px grid)
+    css.append(".fb{animation:fb 1.4s steps(1) infinite alternate}@keyframes fb{from{transform:translateY(0)}to{transform:translateY(4px)}}")
+    b.append(rect(0, 44, W, 4, '#e8f7ff', 'opacity=".55"'))
+    fd = cells_d(disc_cells(8, P), P)
+    for i, x in enumerate(range(8, W, 20)):
         c = ['#ff4757', '#f5f5ff', '#38c6ff'][i % 3]
-        b.append(f'<g transform="translate({x} 46)"><g class="fb" style="animation-delay:-{(i * 0.12) % 1.4:.2f}s"><path d="{fd}" fill="{c}"/></g></g>')
+        b.append(f'<g transform="translate({x} 44)"><g class="fb" style="animation-delay:-{(i * 0.2) % 1.4:.1f}s"><path d="{fd}" fill="{c}"/></g></g>')
 
-    # bubbles
+    # bubbles from the pool floor
     r = random.Random(3)
-    css.append(".bub{animation:bub 4s linear infinite}@keyframes bub{0%{transform:translateY(0);opacity:0}10%{opacity:.8}100%{transform:translateY(-90px);opacity:0}}")
-    for i in range(18):
-        x = r.randrange(0, W // 4) * 4
+    css.append(".bub{animation:bub 4s steps(20) infinite}@keyframes bub{0%{transform:translateY(0);opacity:0}10%{opacity:.8}100%{transform:translateY(-80px);opacity:0}}")
+    for _ in range(16):
+        x = r.randrange(0, W // P) * P
         s = r.choice([4, 4, 8])
-        b.append(f'<g transform="translate({x} 160)"><g class="bub" style="animation-delay:-{r.uniform(0, 4):.1f}s;animation-duration:{r.uniform(3, 6):.1f}s">'
-                 f'{rect(0, 0, s, s, "#c9ecff", 'opacity=".7"')}</g></g>')
+        b.append(f'<g transform="translate({x} {H - 8})"><g class="bub" style="animation-delay:-{r.uniform(0, 4):.1f}s;animation-duration:{r.uniform(3, 6):.1f}s">'
+                 f'{rect(0, 0, s, s, "#c9ecff", BUB_OPACITY)}</g></g>')
 
-    # swimming python
-    HEAD = ["..KKKKKK...", ".KGGGGGGK..", "KGGSSBBSK..", "KSSSBWBSSK.", "KGGGSBBSGGK",
-            "KGGGGGGGGGK", ".KYYYYYYYK.", "..KKKKKKK.."]
-    css.append(".swim{animation:swim 16s linear infinite}@keyframes swim{from{transform:translateX(-260px)}to{transform:translateX(1060px)}}"
-               ".sl{animation:sl .9s ease-in-out infinite alternate}@keyframes sl{from{transform:translateY(-7px)}to{transform:translateY(7px)}}")
-    segs = []
-    for i in range(12, 0, -1):
-        s = 14 if i < 10 else 14 - (i - 9) * 3
-        segs.append(f'<g class="sl" style="animation-delay:-{i * 0.13:.2f}s">'
-                    f'{rect(-i * 12, 4 + (14 - s) // 2, s, s, "#0b0b1e")}{rect(-i * 12 + 2, 6 + (14 - s) // 2, s - 4, s - 4, "#3ddc84")}'
-                    f'{rect(-i * 12 + 2, 6 + (14 - s) // 2 + s - 8, s - 4, 4, "#b6ffcf")}</g>')
-    head = (f'<g class="sl">{sprite(HEAD, SNEK_PAL, 0, 0, 3)}'
-            f'<g class="flick">{sprite(["RRR.R", "...R.", "RRR.R"], {"R": "#ff4757"}, 33, 12, 2)}</g></g>')
-    b.append(f'<g transform="translate(0 80)"><g class="swim">{"".join(segs)}{head}</g></g>')
+    # cute swimming python: every part on the same 4px grid
+    T = 1.6
+    css.append(f".sw{{animation:sw {T}s steps(1) infinite}}"
+               "@keyframes sw{0%{transform:translateY(0)}12.5%{transform:translateY(-4px)}25%{transform:translateY(-8px)}"
+               "37.5%{transform:translateY(-4px)}50%{transform:translateY(0)}62.5%{transform:translateY(4px)}"
+               "75%{transform:translateY(8px)}87.5%{transform:translateY(4px)}}"
+               f".hb{{animation:hb {T}s steps(1) infinite}}"
+               "@keyframes hb{0%{transform:translateY(0)}25%{transform:translateY(-4px)}50%{transform:translateY(0)}75%{transform:translateY(4px)}}"
+               ".swim{animation:swim 20s steps(330) infinite}@keyframes swim{from{transform:translateX(-240px)}to{transform:translateX(1080px)}}"
+               ".mb{animation:mb 1.8s steps(6) infinite}@keyframes mb{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-24px);opacity:0}}"
+               ".hrt{opacity:0;animation:hrt 5s steps(6) infinite}@keyframes hrt{0%,70%{transform:translateY(0);opacity:0}72%{opacity:1}100%{transform:translateY(-24px);opacity:0}}")
 
-    b.append(cstext("KEEP SWIMMING · SEE YOU AT 42 BANGKOK", W / 2, 136, 2, '#ffffff', '#063a6b'))
+    def seg(rows, x, y, i):
+        dl = -((T - (i + 1) * 0.12) % T)
+        return f'<g class="sw" style="animation-delay:{dl:.2f}s">{sprite(rows, SWIM_PAL, x, y, P)}</g>'
+
+    body_y = 5 * P
+    parts = []
+    N = 11
+    tail = [(["KK", "GG", "GD", "YY", "KK"], 1), (["KK", "GG", "YY", "KK"], 1), ([".K", "KG", "KK"], 2), (["K", "K"], 2)]
+    for j in reversed(range(len(tail))):
+        rows, off = tail[j]
+        x = -(N + j + 1) * 2 * P + (2 - len(rows[0])) * P
+        parts.append(seg(rows, x, body_y + off * P, N + j))
+    for i in reversed(range(N)):
+        spot = "GD" if i % 2 == 0 else "DG"
+        parts.append(seg(["KK", "LL", "GG", spot, "YY", "KK"], -(i + 1) * 2 * P, body_y, i))
+    ring = ".W. W.W .W.".split()
+    heart = ".#.#. ##### ##### .###. ..#..".split()
+    head = (f'<g class="hb">{sprite(SWIM_HEAD, SWIM_PAL, 0, 0, P)}'
+            f'<g class="flick">{sprite(["...R", "RRR.", "...R"], SWIM_PAL, 15 * P, 9 * P, P)}</g>'
+            + "".join(f'<g class="mb" style="animation-delay:-{k * 0.6:.1f}s">{sprite(ring, SWIM_PAL, (15 + k) * P, (2 - k) * P, P)}</g>' for k in range(3))
+            + f'<g class="hrt">{sprite(heart, {"#": "#ff8fc7"}, 6 * P, -6 * P, P)}</g></g>')
+    b.append(f'<g transform="translate(0 60)"><g class="swim">{"".join(parts)}{head}</g></g>')
     b.append('</g>')
-    return svg(W, H, "".join(b), "".join(css), "".join(defs), "Pixel pool with a swimming python")
+    return svg(W, H, "".join(b), "".join(css), "".join(defs), "Pixel pool with a cute python in swim goggles")
 
 
 # ================================================================== DIVIDER
