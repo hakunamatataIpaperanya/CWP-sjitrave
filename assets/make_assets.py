@@ -978,19 +978,14 @@ def stats():
 
 # ================================================================== POOL FOOTER
 SWIM_HEAD = [
-    ".....KKKKKKKK..",
-    "...KKGGGGKBWBK.",
-    "..KSSSSSSKBBBK.",
-    ".KGGGGGGGGKKKGK",
-    ".KGGGGGGGKKKGGK",
-    "KGGGGGGGKWWKKGK",
-    "KGGGGGGGKWKKKGK",
-    "KGGGGGGGKKKWKGK",
-    "KGGGGGGGGKKKGGK",
-    "KGGGGGGGGGGPPGK",
-    "KYYYYGGGGGGGKGK",
-    ".KYYYYYYYYKKYK.",
-    "..KKKKKKKKKKK..",
+    "..KKKKKKKK..",
+    "KKLLLBBBBLK.",
+    "LLSSSBKWBGGK",
+    "GGGGGBKKBGGK",
+    "GGGGGGBBGGGK",
+    "YYYYGGPPGKKK",
+    "KYYYYYYYYYK.",
+    ".KKKKKKKKK..",
 ]
 SWIM_PAL = {"K": "#0b0b1e", "G": "#3ddc84", "L": "#8ff5b8", "D": "#22a862", "Y": "#d4ffe6",
             "W": "#ffffff", "P": "#ff8fc7", "S": "#ff4fd8", "B": "#38c6ff", "R": "#ff4757"}
@@ -1040,8 +1035,6 @@ def pool():
                "@keyframes sw{0%{transform:translateY(0)}12.5%{transform:translateY(-4px)}25%{transform:translateY(-8px)}"
                "37.5%{transform:translateY(-4px)}50%{transform:translateY(0)}62.5%{transform:translateY(4px)}"
                "75%{transform:translateY(8px)}87.5%{transform:translateY(4px)}}"
-               f".hb{{animation:hb {T}s steps(1) infinite}}"
-               "@keyframes hb{0%{transform:translateY(0)}25%{transform:translateY(-4px)}50%{transform:translateY(0)}75%{transform:translateY(4px)}}"
                ".swim{animation:swim 20s steps(330) infinite}@keyframes swim{from{transform:translateX(-240px)}to{transform:translateX(1080px)}}"
                ".mb{animation:mb 1.8s steps(6) infinite}@keyframes mb{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-24px);opacity:0}}"
                ".hrt{opacity:0;animation:hrt 5s steps(6) infinite}@keyframes hrt{0%,70%{transform:translateY(0);opacity:0}72%{opacity:1}100%{transform:translateY(-24px);opacity:0}}")
@@ -1050,9 +1043,9 @@ def pool():
         dl = -((T - (i + 1) * 0.12) % T)
         return f'<g class="sw" style="animation-delay:{dl:.2f}s">{sprite(rows, SWIM_PAL, x, y, P)}</g>'
 
-    body_y = 5 * P
+    body_y = 1 * P
     parts = []
-    N = 11
+    N = 13
     tail = [(["KK", "GG", "GD", "YY", "KK"], 1), (["KK", "GG", "YY", "KK"], 1), ([".K", "KG", "KK"], 2), (["K", "K"], 2)]
     for j in reversed(range(len(tail))):
         rows, off = tail[j]
@@ -1063,11 +1056,12 @@ def pool():
         parts.append(seg(["KK", "LL", "GG", spot, "YY", "KK"], -(i + 1) * 2 * P, body_y, i))
     ring = ".W. W.W .W.".split()
     heart = ".#.#. ##### ##### .###. ..#..".split()
-    head = (f'<g class="hb">{sprite(SWIM_HEAD, SWIM_PAL, 0, 0, P)}'
-            f'<g class="flick">{sprite(["...R", "RRR.", "...R"], SWIM_PAL, 15 * P, 9 * P, P)}</g>'
-            + "".join(f'<g class="mb" style="animation-delay:-{k * 0.6:.1f}s">{sprite(ring, SWIM_PAL, (15 + k) * P, (2 - k) * P, P)}</g>' for k in range(3))
-            + f'<g class="hrt">{sprite(heart, {"#": "#ff8fc7"}, 6 * P, -6 * P, P)}</g></g>')
-    b.append(f'<g transform="translate(0 60)"><g class="swim">{"".join(parts)}{head}</g></g>')
+    hw = len(SWIM_HEAD[0])
+    head = (f'<g class="sw" style="animation-delay:0s">{sprite(SWIM_HEAD, SWIM_PAL, 0, 0, P)}'
+            f'<g class="flick">{sprite(["...R", "RRR.", "...R"], SWIM_PAL, hw * P, 4 * P, P)}</g>'
+            + "".join(f'<g class="mb" style="animation-delay:-{k * 0.6:.1f}s">{sprite(ring, SWIM_PAL, (hw + k) * P, -k * P, P)}</g>' for k in range(3))
+            + f'<g class="hrt">{sprite(heart, {"#": "#ff8fc7"}, 4 * P, -6 * P, P)}</g></g>')
+    b.append(f'<g transform="translate(0 64)"><g class="swim">{"".join(parts)}{head}</g></g>')
     b.append('</g>')
     return svg(W, H, "".join(b), "".join(css), "".join(defs), "Pixel pool with a cute python in swim goggles")
 
