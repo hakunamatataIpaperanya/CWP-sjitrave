@@ -1042,11 +1042,168 @@ def divider():
     return svg(W, H, body, css, "", "")
 
 
+# ================================================================== FLOW DIAGRAM
+HEAD_R = ["#......", "###....", "#####..", "#######", "#####..", "###....", "#......"]
+
+
+def rot(rows):
+    N = len(rows)
+    return ["".join(rows[N - 1 - c][r] for c in range(N)) for r in range(N)]
+
+
+HEAD_D = rot(HEAD_R)
+HEAD_L = rot(HEAD_D)
+HEAD_U = rot(HEAD_L)
+DIAG_ICON = ["#.....#", ".#...#.", "..#.#..", "...#...", "..#.#..", ".#...#.", "#.....#"]
+LINE_ICON = ["...#...", "...#...", "...#...", "#######", "...#...", "...#...", "...#..."]
+
+
+def flow():
+    W, H = 960, 488
+    css, defs, b = [BLINK], [], []
+    INK, LINE = '#ecebff', '#cfc6ff'
+    b.append(f'<path d="{ppath(0, 0, W, H)}" fill="#3a2d7a"/>')
+    b.append(f'<path d="{ppath(4, 4, W - 8, H - 8)}" fill="#100c24"/>')
+    defs.append('<pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#2a2154"/></pattern>')
+    b.append(rect(8, 8, W - 16, H - 16, 'url(#dots)'))
+    b.append(stext("BOSS STRATEGY", 28, 26, 3, '#ffd36e', '#3a1250'))
+    b.append(text("how checkmate.py thinks", 28 + tw("BOSS STRATEGY", 3) + 24, 33, 2, '#9d8cff'))
+
+    css.append(".march{animation:march .8s linear infinite}@keyframes march{to{stroke-dashoffset:-12}}")
+
+    def wire(d):
+        return (f'<path d="{d}" fill="none" stroke="#04020d" stroke-width="8" opacity=".6"/>'
+                f'<path class="march" d="{d}" fill="none" stroke="{LINE}" stroke-width="4" stroke-dasharray="6 6"/>')
+
+    def arrow_r(x1, x2, y):
+        return wire(f"M{x1} {y}H{x2 - 12}") + sprite(HEAD_R, {"#": LINE}, x2 - 14, y - 7, 2)
+
+    def arrow_d(x, y1, y2):
+        return wire(f"M{x} {y1}V{y2 - 12}") + sprite(HEAD_D, {"#": LINE}, x - 7, y2 - 14, 2)
+
+    def arrow_u(x, y1, y2):
+        return wire(f"M{x} {y1}V{y2 + 12}") + sprite(HEAD_U, {"#": LINE}, x - 7, y2, 2)
+
+    def node(x, y, w, h, border, fill, cls=""):
+        c = f' class="{cls}"' if cls else ""
+        return (f'<path{c} d="{ppath(x, y, w, h)}" fill="{border}"/>'
+                f'<path d="{ppath(x + 4, y + 4, w - 8, h - 8, 4, (2, 1))}" fill="{fill}"/>')
+
+    def badge(x, y, num):
+        return (f'<path d="{ppath(x, y, 24, 24, 2, (2, 1))}" fill="#ffd36e"/>'
+                f'{text(num, x + 7, y + 5, 2, "#2a1652")}')
+
+    Y, NH = 176, 100
+    MY = Y + NH // 2
+    S = [(24, 150), (214, 170), (424, 140), (604, 140), (780, 132)]
+    OUT_X, OUT_W = 756, 180
+    OUT_CX = OUT_X + OUT_W // 2
+
+    # travelling data packet (drawn under the boxes, so it only shows on the wires)
+    S5c = S[4][0] + S[4][1] // 2
+    b.append(f'<g><animate attributeName="opacity" dur="5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;.04;.92;1"/>'
+             f'<animateMotion dur="5s" repeatCount="indefinite" path="M{S[0][0] + S[0][1]} {MY}H{S5c}V{110}"/>'
+             f'{rect(-9, -9, 18, 18, "#7af6ff", "opacity=\".35\"")}{rect(-4, -4, 8, 8, "#ffffff")}</g>')
+
+    # wires
+    for (x1, w1), (x2, _) in zip(S, S[1:]):
+        b.append(arrow_r(x1 + w1, x2, MY))
+    p2 = S[1][0] + S[1][1] // 2
+    b.append(arrow_d(p2, Y + NH, 330))
+    b.append(arrow_u(S5c, Y, 112))
+    b.append(arrow_d(S5c, Y + NH, 330))
+    b.append(wire(f"M{S[3][0] + S[3][1] // 2} {Y + NH}V306"))
+    b.append(text("YES", S[1][0] + S[1][1] + 3, MY - 22, 2, '#5dff9a'))
+    b.append(text("NO", p2 + 12, 292, 2, '#ff3b5c'))
+    b.append(text("YES", S5c + 12, 134, 2, '#5dff9a', 'class="bl"'))
+    b.append(text("NO", S5c + 12, 292, 2, '#ff3b5c'))
+
+    # 1 · input board
+    x, w = S[0]
+    cx = x + w // 2
+    b.append(node(x, Y, w, NH, '#5a4aa8', '#171233'))
+    b.append(ctext("INPUT", cx, Y + 14, 2, '#7af6ff'))
+    board = ["..QB.", "K....", ".....", "R..P.", "....."]
+    for rr, row in enumerate(board):
+        for cc, ch in enumerate(row):
+            col = '#ffd36e' if ch == 'K' else '#ff6fa8' if ch != '.' else ('#3b2f6e' if (rr + cc) % 2 == 0 else '#2a2154')
+            b.append(rect(cx - 25 + cc * 10, Y + 38 + rr * 10, 10, 10, col))
+    b.append(badge(x - 8, Y - 12, "1"))
+
+    # 2 · parse_board
+    x, w = S[1]
+    cx = x + w // 2
+    b.append(node(x, Y, w, NH, '#5a4aa8', '#171233'))
+    b.append(ctext("PARSE_BOARD", cx, Y + 14, 2, '#7af6ff'))
+    b.append(ctext("SQUARE?", cx, Y + 44, 2, INK))
+    b.append(ctext("ONE KING?", cx, Y + 68, 2, INK))
+    b.append(badge(x - 8, Y - 12, "2"))
+
+    # 3 · find_king
+    x, w = S[2]
+    cx = x + w // 2
+    b.append(node(x, Y, w, NH, '#5a4aa8', '#171233'))
+    b.append(ctext("FIND_KING", cx, Y + 14, 2, '#7af6ff'))
+    b.append(sprite(PIECES["K"], KING_PAL, cx - 18, Y + 44, 3))
+    b.append(badge(x - 8, Y - 12, "3"))
+
+    # 4 · scan 8 rays (animated compass)
+    x, w = S[3]
+    cx = x + w // 2
+    b.append(node(x, Y, w, NH, '#5a4aa8', '#171233'))
+    b.append(ctext("SCAN RAYS", cx, Y + 14, 2, '#7af6ff'))
+    ox, oy = cx - 22, Y + 42
+    css.append(".ry{animation:ry 1.6s steps(1) infinite}@keyframes ry{0%{fill:#ffffff}14%,100%{fill:#3d5f9a}}")
+    for i, (dx, dy) in enumerate([(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]):
+        cells = [(5 + dx * k, 5 + dy * k) for k in range(2, 6) if 0 <= 5 + dx * k <= 10 and 0 <= 5 + dy * k <= 10]
+        b.append(f'<path class="ry" style="animation-delay:{i * 0.2:.1f}s" d="{cells_d(cells, 4, ox, oy)}" fill="#3d5f9a"/>')
+    b.append(f'<path d="{cells_d([(i, j) for i in range(4, 7) for j in range(4, 7)], 4, ox, oy)}" fill="#ffd36e"/>')
+    b.append(badge(x - 8, Y - 12, "4"))
+
+    # 5 · decision
+    x, w = S[4]
+    cx = x + w // 2
+    css.append(".dec{animation:dec 1.2s steps(1) infinite}@keyframes dec{0%{fill:#ffd36e}50%{fill:#ff9f43}}")
+    b.append(node(x, Y, w, NH, '#ffd36e', '#2a2010', 'dec'))
+    b.append(ctext("ATTACKER", cx, Y + 14, 2, '#ffd36e'))
+    b.append(ctext("IN RANGE?", cx, Y + 44, 2, INK))
+    b.append(ctext("?", cx, Y + 70, 2, '#ffd36e', 'class="bl"'))
+    b.append(badge(x - 8, Y - 12, "5"))
+
+    # outputs
+    css.append(".ok{animation:ok 1.6s steps(1) infinite}@keyframes ok{0%{fill:#5dff9a}50%{fill:#2fbf6a}}")
+    b.append(node(OUT_X, 36, OUT_W, 76, '#5dff9a', '#0f2e22', 'ok'))
+    b.append(cstext("SUCCESS", OUT_CX, 48, 3, '#5dff9a', '#062016'))
+    b.append(ctext("KING IN CHECK", OUT_CX, 82, 2, INK))
+    b.append(node(OUT_X, 330, OUT_W, 76, '#ff3b5c', '#2e0f18'))
+    b.append(cstext("FAIL", OUT_CX, 342, 3, '#ff3b5c', '#1a050b'))
+    b.append(ctext("KING IS SAFE", OUT_CX, 376, 2, INK))
+    ix = p2 - OUT_W // 2
+    b.append(node(ix, 330, OUT_W, 76, '#5a4f8a', '#15122a'))
+    b.append(cstext("INVALID", p2, 342, 3, '#a59bd6', '#08060f'))
+    b.append(ctext("PRINT NOTHING", p2, 376, 2, '#8c84b8'))
+
+    # ray rules card
+    rx, ry, rw, rh = 410, 306, 330, 164
+    b.append(node(rx, ry, rw, rh, '#5a4aa8', '#120e2a'))
+    b.append(text("RAY RULES", rx + 16, ry + 14, 2, '#ffd36e'))
+    rows = [(DIAG_ICON, "BQ", "ANY RANGE"), (DIAG_ICON, "P", "1 STEP, FROM BELOW"), (LINE_ICON, "RQ", "ANY RANGE")]
+    for i, (icon, pcs, rule) in enumerate(rows):
+        yy = ry + 40 + i * 32
+        b.append(sprite(icon, {"#": '#7af6ff'}, rx + 16, yy + 2, 3))
+        for k, pc in enumerate(pcs):
+            b.append(sprite(PIECES[pc], FOE_PAL, rx + 50 + k * 28, yy, 2))
+        b.append(text(rule, rx + 50 + len(pcs) * 28 + 10, yy + 6, 2, INK))
+    b.append(text("FIRST HIT BLOCKS THE RAY", rx + 16, ry + 136, 2, '#9d8cff'))
+    return svg(W, H, "".join(b), "".join(css), "".join(defs), "Flow diagram: how checkmate.py decides Success or Fail")
+
+
 if __name__ == "__main__":
     save("banner.svg", banner())
     save("terminal.svg", terminal())
     save("map.svg", worldmap())
     save("checkmate.svg", checkmate_svg())
+    save("flow.svg", flow())
     save("stats.svg", stats())
     save("pool.svg", pool())
     save("divider.svg", divider())
